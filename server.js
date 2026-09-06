@@ -68,6 +68,15 @@ fetch('/login', {
     alert("Login Successful!");
     window.location.href = "/portal";
   } else {
+   app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  if(email === "student@ryan.com" && password === "12345"){
+    return res.json({ success: true, message: "Login Successful" });
+  } else {
+    return res.status(401).json({ success: false, message: "Invalid Credentials" });
+  }
+});
+
     alert("Invalid Credentials");
   }
 });
