@@ -34,6 +34,17 @@ app.post('/submit', (req, res) => {
   const name = req.body.name;
   if(!name || name.length < 3){
     return res.status(400).send("Invalid input");
+   app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  // साधं उदाहरण: नंतर database जोडता येईल
+  if(username === "student" && password === "12345"){
+    res.send("Login Successful! Welcome to Portal");
+  } else {
+    res.status(401).send("Invalid Credentials");
+  }
+});
+
   }
   res.send("Success");
 });
