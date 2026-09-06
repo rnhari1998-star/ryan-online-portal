@@ -44,8 +44,31 @@ app.post('/submit', (req, res) => {
     res.status(401).send("Invalid Credentials");
   }
 });
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if(username === "student" && password === "student123"){
+    return res.json({ success: true, message: "Login Successful" });
+  } else {
+    return res.status(401).json({ success: false, message: "Invalid Credentials" });
+  }
+});
 
   }
   res.send("Success");
+});
+fetch('/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ username, password })
+})
+.then(res => res.json())
+.then(data => {
+  if(data.success){
+    alert("Login Successful!");
+    window.location.href = "/portal";
+  } else {
+    alert("Invalid Credentials");
+  }
 });
 
