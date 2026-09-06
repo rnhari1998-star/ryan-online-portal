@@ -30,3 +30,11 @@ app.get("/api/fees",auth,(req,res)=>res.json(req.user.role==="student"?db.prepar
 app.get("/api/students",auth,roles("teacher","admin"),(req,res)=>res.json(db.prepare("SELECT id,name,username FROM users WHERE role='student'").all()));
 app.post("/api/tests",auth,roles("teacher","admin"),(req,res)=>{let x=req.body,t=db.prepare("INSERT INTO tests(title,subject,duration,one_attempt,published) VALUES(?,?,?,?,1)").run(x.title,x.subject,x.duration||30,x.one_attempt?1:0);let q=db.prepare("INSERT INTO questions(test_id,question,a,b,c,d,correct,marks) VALUES(?,?,?,?,?,?,?,?)");for(let z of x.questions||[])q.run(t.lastInsertRowid,z.question,z.a,z.b,z.c,z.d,z.correct,z.marks||1);res.json({id:t.lastInsertRowid})});
 app.get("*",(req,res)=>res.sendFile(path.join(__dirname,"public/index.html")));app.listen(process.env.PORT||3000);
+app.post('/submit', (req, res) => {
+  const name = req.body.name;
+  if(!name || name.length < 3){
+    return res.status(400).send("Invalid input");
+  }
+  res.send("Success");
+});
+
