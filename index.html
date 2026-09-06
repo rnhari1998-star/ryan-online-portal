@@ -1,28 +1,120 @@
-<!doctype html><html><<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Free Education and Online Test Portal for RYAN Group of Institutions">
-<meta name="keywords" content="Education, Online Test, RYAN, Students">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-><meta name="viewport" content="width=device-width,initial-scale=1"><title>RYAN Group Portal</title>
-<style>body{margin:0;font-family:Arial;background:#f5f6fa;color:#172033}header,.hero{background:linear-gradient(135deg,#160d29,#5b21b6);color:white}header{padding:12px 20px}.nav,.wrap{max-width:1100px;margin:auto}.nav{display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:10px;font-weight:bold}.brand img{width:48px;height:48px;object-fit:cover;border-radius:10px}.hero{padding:65px 20px}.hero h1{font-size:clamp(40px,7vw,65px);margin:0}.wrap{padding:30px 20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:white;padding:22px;border-radius:16px;box-shadow:0 6px 25px #0001;margin-bottom:18px}.btn{border:0;border-radius:9px;padding:12px 16px;font-weight:bold;cursor:pointer}.primary{background:#5b21b6;color:white}.gold{background:#f59e0b}.input{width:100%;padding:12px;margin:7px 0 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box}.hidden{display:none}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{padding:10px;border:0;border-radius:8px}.tabs .active{background:#5b21b6;color:white}.q{border:1px solid #eee;padding:16px;border-radius:12px;margin:14px 0}.option{display:block;padding:7px}table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #eee;text-align:left}@media(max-width:700px){.grid{grid-template-columns:1fr}}</style></head>
-<body><header><div class="nav"><div class="brand"><<<img alt="RYAN Logo" style="height:50px;">>>
- <span>RYAN GROUP OF INSTITUTIONS</span></div><button class="btn gold" onclick="loginBox()">Login</button></div></header>
-<div id="home"><div class="hero"><div class="wrap"><h1>Learn. Practice. Achieve.</h1><p>Tuition • Coaching • Online Tests • Results • Teacher Portal</p><button class="btn gold" onclick="loginBox()">Open Portal</button></div></div><div class="wrap"><div class="grid"><div class="card"><h3>📚 Tuition</h3><p>Courses and study support.</p></div><div class="card"><h3>📝 Online Tests</h3><p>Timed MCQ tests and automatic results.</p></div><div class="card"><h3>📊 Performance</h3><p>Student results and fee records.</p></div></div></div></div>
-<div id="login" class="wrap hidden"><div class="card"><h2>Portal Login</h2><input id="u" class="input" placeholder="Username"><input id="p" class="input" type="password" placeholder="Password"><button class="btn primary" onclick="doLogin()">Login</button><p id="msg"></p><small>Demo: student/student123 • teacher/teacher123 • admin/admin123</small></div></div>
-<div id="app" class="wrap hidden"><h2 id="welcome"></h2><div class="tabs"><button class="active" onclick="tab('tests',this)">Tests</button><button onclick="tab('results',this)">Results</button><button onclick="tab('fees',this)">Fees</button><button id="st" class="hidden" onclick="tab('students',this)">Students</button><button id="ct" class="hidden" onclick="tab('create',this)">Create Test</button><button onclick="logout()">Logout</button></div><div id="content"></div></div>
-<script>let token="",me={};const $=x=>document.getElementById(x);function loginBox(){$("home").classList.add("hidden");$("login").classList.remove("hidden")}async function api(u,o={}){o.headers={...(o.headers||{}),Authorization:"Bearer "+token,"Content-Type":"application/json"};let r=await fetch(u,o),x=await r.json();if(!r.ok)throw Error(x.error);return x}
-async function doLogin(){try{let r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:$("u").value,password:$("p").value})}),x=await r.json();if(!r.ok)throw Error(x.error);token=x.token;me=x.user;$("login").classList.add("hidden");$("app").classList.remove("hidden");$("welcome").textContent="Welcome, "+me.name+" ("+me.role+")";$("st").classList.toggle("hidden",!["teacher","admin"].includes(me.role));$("ct").classList.toggle("hidden",!["teacher","admin"].includes(me.role));tab("tests");}catch(e){$("msg").textContent=e.message}}
-function logout(){location.reload()}function tab(x,b){if(b){document.querySelectorAll(".tabs button").forEach(z=>z.classList.remove("active"));b.classList.add("active")}({tests,results,fees,students,create}[x])()}
-async function tests(){let t=await api("/api/tests");$("content").innerHTML="<div class='grid'>"+t.map(x=>`<div class='card'><h3>${x.title}</h3><p>${x.subject} • ${x.duration} min • ${x.one_attempt?"One attempt":"Multiple attempts"}</p><button class='btn primary' onclick='openTest(${x.id})'>Start</button></div>`).join("")+"</div>"}
-async function openTest(id){let t=await api("/api/tests/"+id);if(t.attempted){$("content").innerHTML="<div class='card'><h2>Already attempted</h2></div>";return}$("content").innerHTML=`<div class='card'><h2>${t.title}</h2><div id='tm'></div><form id='form'>${t.questions.map((q,i)=>`<div class='q'><b>${i+1}. ${q.question}</b><label class='option'><input type=radio name=q${q.id} value=A> ${q.a}</label><label class='option'><input type=radio name=q${q.id} value=B> ${q.b}</label><label class='option'><input type=radio name=q${q.id} value=C> ${q.c}</label><label class='option'><input type=radio name=q${q.id} value=D> ${q.d}</label></div>`).join("")}<button type=button class='btn primary' onclick='submitTest(${id})'>Submit</button></form></div>`;let end=Date.now()+t.duration*60000;let timer=setInterval(()=>{let s=Math.max(0,Math.ceil((end-Date.now())/1000));$("tm").textContent="Time: "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0");if(!s){clearInterval(timer);submitTest(id)}},500)}
-async function submitTest(id){let a={};document.querySelectorAll("#form input:checked").forEach(x=>a[x.name.slice(1)]=x.value);try{let r=await api("/api/tests/"+id+"/submit",{method:"POST",body:JSON.stringify({answers:a})});$("content").innerHTML=`<div class='card'><h2>Result ✅</h2><h1>${r.score}/${r.total}</h1><p>${r.percentage}%</p></div>`}catch(e){alert(e.message)}}
-async function results(){let r=await api("/api/results");$("content").innerHTML="<div class='card'><h2>Results</h2><table><tr><th>Student</th><th>Test</th><th>Score</th></tr>"+r.map(x=>`<tr><td>${x.name||"Me"}</td><td>${x.title}</td><td>${x.score}/${x.total}</td></tr>`).join("")+"</table></div>"}
-async function fees(){let r=await api("/api/fees");$("content").innerHTML="<div class='card'><h2>Fees</h2><table><tr><th>Student</th><th>Installment</th><th>Amount</th><th>Status</th></tr>"+r.map(x=>`<tr><td>${x.name||"Me"}</td><td>${x.installment}</td><td>₹${x.amount}</td><td>${x.status}</td></tr>`).join("")+"</table></div>"}
-async function students(){let r=await api("/api/students");$("content").innerHTML="<div class='card'><h2>Students</h2>"+r.map(x=>`<p>${x.name} — ${x.username}</p>`).join("")+"</div>"}
-function create(){$("content").innerHTML="<div class='card'><h2>Create Test</h2><input id='tt' class='input' placeholder='Title'><input id='ss' class='input' placeholder='Subject'><input id='dd' class='input' type=number value=30><div id='qq'></div><button class='btn gold' onclick='addq()'>Add Question</button> <button class='btn primary' onclick='save()'>Publish</button></div>";addq()}function addq(){let d=document.createElement("div");d.className="q";d.innerHTML="<input class='input qx' placeholder='Question'><input class='input aa' placeholder='Option A'><input class='input bb' placeholder='Option B'><input class='input cc' placeholder='Option C'><input class='input dd' placeholder='Option D'><select class='input co'><option>A</option><option>B</option><option>C</option><option>D</option></select>";$("qq").appendChild(d)}async function save(){let qs=[...document.querySelectorAll("#qq .q")].map(x=>({question:x.querySelector(".qx").value,a:x.querySelector(".aa").value,b:x.querySelector(".bb").value,c:x.querySelector(".cc").value,d:x.querySelector(".dd").value,correct:x.querySelector(".co").value,marks:1}));try{await api("/api/tests",{method:"POST",body:JSON.stringify({title:$("tt").value,subject:$("ss").value,duration:+$("dd").value,one_attempt:true,questions:qs})});alert("Published");tests()}catch(e){alert(e.message)}}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Free Education and Online Test Portal for RYAN Group of Institutions">
+  <meta name="keywords" content="Education, Online Test, RYAN, Students, Teachers">
+  <title>RYAN Group of Institutions - Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #4b0082, #6a0dad);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #4b0082;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header img {
+      height: 50px;
+      margin-right: 10px;
+    }
+    .login-box {
+      background: #fff;
+      color: #000;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+    }
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .btn-login {
+      background-color: #4b0082;
+      color: #fff;
+      width: 100%;
+    }
+    .hero {
+      text-align: center;
+      margin-top: 40px;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .features {
+      display: flex;
+      justify-content: center;
+      margin: 40px 0;
+    }
+    .feature {
+      background: #fff;
+      color: #000;
+      margin: 10px;
+      padding: 20px;
+      border-radius: 8px;
+      flex: 1;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="d-flex align-items-center">
+      <img src="logo.jpg" alt="RYAN Logo">
+      <span><strong>RYAN GROUP OF INSTITUTIONS</strong></span>
+    </div>
+    <button class="btn btn-warning">Login</button>
+  </header>
 
+  <!-- Hero Section -->
+  <div class="hero">
+    <h1>Learn. Practice. Achieve.</h1>
+    <p>Tuition • Coaching • Online Tests • Results • Teacher Portal</p>
+    <a href="#login" class="btn btn-warning">Open Portal</a>
+  </div>
 
-  <input type="text" name="username" placeholder="Enter Username" required>
-  <input type="password" name="password" placeholder="Enter Password" required>
-  <button type="submit">Login</button>
-</form>
+  <!-- Login Box -->
+  <div id="login" class="login-box">
+    <h2>Portal Login</h2>
+    <form action="/login" method="POST">
+      <div class="mb-3">
+        <input type="email" name="email" class="form-control" placeholder="Enter Email" required>
+      </div>
+      <div class="mb-3">
+        <input type="password" name="password" class="form-control" placeholder="Enter Password" required>
+      </div>
+      <button type="submit" class="btn btn-login">Login</button>
+    </form>
+  </div>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="feature">
+      <h3>Tuition</h3>
+      <p>Courses and study support.</p>
+    </div>
+    <div class="feature">
+      <h3>Online Tests</h3>
+      <p>Timed MCQ tests and automatic results.</p>
+    </div>
+    <div class="feature">
+      <h3>Performance</h3>
+      <p>Student results and fee records.</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
